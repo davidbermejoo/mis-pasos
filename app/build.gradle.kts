@@ -11,8 +11,8 @@ android {
         applicationId = "com.abuelo.pasos"
         minSdk = 26          // Android 8.0 o superior
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.1"
     }
 
     // Firma fija: así cada versión nueva se instala encima de la anterior sin perder los datos.

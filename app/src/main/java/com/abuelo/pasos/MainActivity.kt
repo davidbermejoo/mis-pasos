@@ -26,7 +26,6 @@ import android.widget.TextView
 import android.widget.Toast
 import java.text.NumberFormat
 import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 class MainActivity : Activity() {
@@ -44,8 +43,15 @@ class MainActivity : Activity() {
     private val rojo = Color.parseColor("#C62828")
     private val gris = Color.parseColor("#F1F1F1")
 
-    private val es = Locale("es", "ES")
-    private val fmtFecha = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM", es)
+    private val es = Locale("ca", "ES")
+    private val diesSetmana = arrayOf("Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge")
+    private val mesos = arrayOf("gener", "febrer", "març", "abril", "maig", "juny", "juliol", "agost", "setembre", "octubre", "novembre", "desembre")
+
+    private fun dataCatala(d: LocalDate): String {
+        val mes = mesos[d.monthValue - 1]
+        val de = if (mes[0] in "aeiou") "d'" else "de "
+        return "${diesSetmana[d.dayOfWeek.value - 1]} ${d.dayOfMonth} $de$mes"
+    }
 
     private val refresco = object : Runnable {
         override fun run() {
@@ -146,11 +152,11 @@ class MainActivity : Activity() {
             setPadding(dp(20), dp(24), dp(20), dp(32))
         }
 
-        raiz.addView(texto(28f, true).apply { text = "Hoy" }, ancho())
+        raiz.addView(texto(28f, true).apply { text = "Avui" }, ancho())
 
         txtPasos = texto(80f, true, verde)
         raiz.addView(txtPasos, ancho())
-        raiz.addView(texto(26f).apply { text = "pasos" }, ancho())
+        raiz.addView(texto(26f).apply { text = "passos" }, ancho())
 
         txtKm = texto(44f, true, azul).apply { setPadding(0, dp(16), 0, 0) }
         raiz.addView(txtKm, ancho())
@@ -167,7 +173,7 @@ class MainActivity : Activity() {
         raiz.addView(txtAviso, ancho())
 
         raiz.addView(texto(26f, true).apply {
-            text = "Últimos 30 días"
+            text = "Últims 30 dies"
             setPadding(0, dp(40), 0, dp(12))
         }, ancho())
 
@@ -175,7 +181,7 @@ class MainActivity : Activity() {
         raiz.addView(lista, ancho())
 
         val boton = Button(this).apply {
-            text = "Cambiar longitud del paso"
+            text = "Canviar la llargada del pas"
             textSize = 18f
             isAllCaps = false
             setOnClickListener { dialogoZancada() }
@@ -209,8 +215,8 @@ class MainActivity : Activity() {
         txtKm.text = "${km(pasosHoy, cm)} km"
 
         when {
-            !StepStore.haySensor(this) -> aviso("Este móvil no tiene sensor de pasos.")
-            !StepStore.permisoOk(this) -> aviso("Falta el permiso de \"Actividad física\".\nToca aquí para darlo.")
+            !StepStore.haySensor(this) -> aviso("Aquest mòbil no té sensor de passos.")
+            !StepStore.permisoOk(this) -> aviso("Falta el permís d'\"Activitat física\".\nToca aquí per donar-lo.")
             else -> txtAviso.visibility = View.GONE
         }
 
@@ -231,14 +237,14 @@ class MainActivity : Activity() {
                 setPadding(dp(16), dp(12), dp(16), dp(12))
                 if (i % 2 == 1) setBackgroundColor(gris)
             }
-            val nombre = if (i == 1) "Ayer" else dia.format(fmtFecha).replaceFirstChar { it.titlecase(es) }
+            val nombre = if (i == 1) "Ahir" else dataCatala(dia)
             fila.addView(TextView(this).apply {
                 text = nombre
                 textSize = 18f
                 setTextColor(Color.DKGRAY)
             })
             fila.addView(TextView(this).apply {
-                text = "${numero(p)} pasos  ·  ${km(p, cm)} km"
+                text = "${numero(p)} passos  ·  ${km(p, cm)} km"
                 textSize = 22f
                 setTextColor(Color.BLACK)
                 setTypeface(typeface, Typeface.BOLD)
@@ -259,22 +265,22 @@ class MainActivity : Activity() {
             addView(campo)
         }
         AlertDialog.Builder(this)
-            .setTitle("Longitud del paso (cm)")
+            .setTitle("Llargada del pas (cm)")
             .setMessage(
-                "Para medirla: camina 10 pasos normales, mide la distancia en centímetros " +
-                    "y divídela entre 10. Lo normal es entre 55 y 75 cm."
+                "Per mesurar-la: camina 10 passes normals, mesura la distància en centímetres " +
+                    "i divideix-la entre 10. El normal és entre 55 i 75 cm."
             )
             .setView(caja)
-            .setPositiveButton("Guardar") { _, _ ->
+            .setPositiveButton("Desar") { _, _ ->
                 val v = campo.text.toString().toIntOrNull()
                 if (v != null && v in 30..120) {
                     StepStore.setZancada(this, v)
                     pintar()
                 } else {
-                    Toast.makeText(this, "Pon un número entre 30 y 120", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this, "Posa un número entre 30 i 120", Toast.LENGTH_LONG).show()
                 }
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton("Cancel·lar", null)
             .show()
     }
 }

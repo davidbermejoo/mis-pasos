@@ -30,7 +30,7 @@ class StepService : Service(), SensorEventListener {
 
     private var sensorManager: SensorManager? = null
     private var ultimaNotif = 0L
-    private val es = Locale("es", "ES")
+    private val es = Locale("ca", "ES")
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -74,7 +74,7 @@ class StepService : Service(), SensorEventListener {
     }
 
     private fun crearCanal() {
-        val canal = NotificationChannel(CANAL, "Contador de pasos", NotificationManager.IMPORTANCE_LOW)
+        val canal = NotificationChannel(CANAL, "Comptador de passos", NotificationManager.IMPORTANCE_LOW)
         canal.setShowBadge(false)
         getSystemService(NotificationManager::class.java)?.createNotificationChannel(canal)
     }
@@ -88,7 +88,7 @@ class StepService : Service(), SensorEventListener {
         )
         return Notification.Builder(this, CANAL)
             .setSmallIcon(R.drawable.ic_paso)
-            .setContentTitle("Hoy: $pasos pasos")
+            .setContentTitle("Avui: $pasos passos")
             .setContentText(String.format(es, "%.1f km", km))
             .setContentIntent(abrir)
             .setOngoing(true)
