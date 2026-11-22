@@ -15,6 +15,16 @@ android {
         versionName = "1.0"
     }
 
+    // Firma fija: así cada versión nueva se instala encima de la anterior sin perder los datos.
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file("firma.jks")
+            storePassword = "mispasos"
+            keyAlias = "mispasos"
+            keyPassword = "mispasos"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
