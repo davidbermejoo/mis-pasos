@@ -6,6 +6,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -29,6 +30,11 @@ import java.time.LocalDate
 import java.util.Locale
 
 class MainActivity : Activity() {
+
+    companion object {
+        private const val TXT_VER = "CLICA AQUÍ PER VEURE ELS PASSOS DELS ÚLTIMS 30 DIES  ▼"
+        private const val TXT_AMAGAR = "AMAGAR ELS ÚLTIMS 30 DIES  ▲"
+    }
 
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var txtPasos: TextView
@@ -146,20 +152,42 @@ class MainActivity : Activity() {
             if (negrita) setTypeface(typeface, Typeface.BOLD)
         }
 
+    private fun fondoRedondo(color: Int) = GradientDrawable().apply {
+        setColor(color)
+        cornerRadius = dp(24).toFloat()
+    }
+
+    /** Cuadro de color con un número grande y una etiqueta debajo. */
+    private fun cuadro(color: Int, etiqueta: String): Pair<LinearLayout, TextView> {
+        val caja = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = fondoRedondo(color)
+            setPadding(dp(16), dp(20), dp(16), dp(24))
+        }
+        val numero = texto(76f, true, Color.WHITE)
+        caja.addView(numero, ancho())
+        caja.addView(texto(34f, true, Color.WHITE).apply { text = etiqueta }, ancho())
+        return Pair(caja, numero)
+    }
+
     private fun construirPantalla() {
         val raiz = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(24), dp(20), dp(32))
+            setPadding(dp(20), dp(20), dp(20), dp(32))
         }
 
-        raiz.addView(texto(28f, true).apply { text = "Avui" }, ancho())
+        raiz.addView(texto(30f, true).apply {
+            text = "AVUI"
+            setPadding(0, 0, 0, dp(12))
+        }, ancho())
 
-        txtPasos = texto(80f, true, verde)
-        raiz.addView(txtPasos, ancho())
-        raiz.addView(texto(26f).apply { text = "passos" }, ancho())
+        val (cajaPasos, numPasos) = cuadro(verde, "PASSOS")
+        txtPasos = numPasos
+        raiz.addView(cajaPasos, ancho())
 
-        txtKm = texto(44f, true, azul).apply { setPadding(0, dp(16), 0, 0) }
-        raiz.addView(txtKm, ancho())
+        val (cajaKm, numKm) = cuadro(azul, "KM")
+        txtKm = numKm
+        raiz.addView(cajaKm, ancho().apply { topMargin = dp(16) })
 
         txtAviso = texto(20f, true, rojo).apply {
             setPadding(0, dp(16), 0, 0)
@@ -172,21 +200,34 @@ class MainActivity : Activity() {
         }
         raiz.addView(txtAviso, ancho())
 
-        raiz.addView(texto(26f, true).apply {
-            text = "Últims 30 dies"
-            setPadding(0, dp(40), 0, dp(12))
-        }, ancho())
+        // Parte plegable: historial y ajuste del paso, ocultos hasta que lo pulse.
+        val desplegable = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            visibility = View.GONE
+        }
+        val botonHistorial = texto(18f, true, Color.DKGRAY).apply {
+            text = TXT_VER
+            background = fondoRedondo(gris)
+            setPadding(dp(16), dp(18), dp(16), dp(18))
+            setOnClickListener {
+                val abrir = desplegable.visibility != View.VISIBLE
+                desplegable.visibility = if (abrir) View.VISIBLE else View.GONE
+                text = if (abrir) TXT_AMAGAR else TXT_VER
+            }
+        }
+        raiz.addView(botonHistorial, ancho().apply { topMargin = dp(28) })
 
         lista = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        raiz.addView(lista, ancho())
+        desplegable.addView(lista, ancho().apply { topMargin = dp(12) })
 
         val boton = Button(this).apply {
             text = "Canviar la llargada del pas"
-            textSize = 18f
+            textSize = 16f
             isAllCaps = false
             setOnClickListener { dialogoZancada() }
         }
-        raiz.addView(boton, ancho().apply { topMargin = dp(32) })
+        desplegable.addView(boton, ancho().apply { topMargin = dp(24) })
+        raiz.addView(desplegable, ancho())
 
         val scroll = ScrollView(this).apply {
             fitsSystemWindows = true
@@ -212,7 +253,7 @@ class MainActivity : Activity() {
         val cm = StepStore.zancadaCm(this)
         val pasosHoy = StepStore.pasos(this, hoy)
         txtPasos.text = numero(pasosHoy)
-        txtKm.text = "${km(pasosHoy, cm)} km"
+        txtKm.text = km(pasosHoy, cm)
 
         when {
             !StepStore.haySensor(this) -> aviso("Aquest mòbil no té sensor de passos.")
